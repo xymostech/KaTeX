@@ -66,6 +66,7 @@ app.get("/test/katex-spec.js", function(req, res, next) {
 app.use(express.static(path.join(__dirname, "static")));
 app.use(express.static(path.join(__dirname, "build")));
 app.use("/test", express.static(path.join(__dirname, "test")));
+app.use("/contrib", express.static(path.join(__dirname, "contrib")));
 
 app.use(function(err, req, res, next) {
     console.error(err.stack);
