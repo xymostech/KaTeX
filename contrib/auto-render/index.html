@@ -31,7 +31,17 @@
       </pre>
     </div>
     <script>
-      processMathInElement(document.getElementById("test"));
+      processMathInElement(
+          document.getElementById("test"),
+          {
+              delimiters: [
+                  {left: "$$", right: "$$", display: true},
+                  {left: "\\[", right: "\\]", display: true},
+                  {left: "$", right: "$", display: false},
+                  {left: "\\(", right: "\\)", display: false}
+              ]
+          }
+      );
     </script>
   </body>
 </html>
