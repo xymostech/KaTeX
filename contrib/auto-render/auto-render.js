@@ -51,7 +51,9 @@
                 while (nextIndex !== -1) {
                     if (lookingForLeft) {
                         nextIndex = text.slice(currIndex).indexOf(leftDelim);
-                        if (nextIndex === -1) break;
+                        if (nextIndex === -1) {
+                            break;
+                        }
 
                         finalData.push({
                             type: "text",
@@ -63,7 +65,9 @@
                         nextIndex = findEndOfMath(
                             rightDelim,
                             text.slice(currIndex + leftDelim.length));
-                        if (nextIndex === -1) break;
+                        if (nextIndex === -1) {
+                            break;
+                        }
 
                         finalData.push({
                             type: "math",
@@ -171,7 +175,7 @@
             }
         }
         return obj;
-    };
+    }
 
     function processMathInElement(elem, options) {
         if (!elem) {
