@@ -73,6 +73,7 @@ serve:
 
 test:
 	./node_modules/.bin/jasmine-node test/katex-spec.js
+	./node_modules/.bin/jasmine-node contrib/auto-render/auto-render-spec.js
 
 metrics:
 	cd metrics && ./mapping.pl | ./extract_tfms.py | ./extract_ttfs.py | ./replace_line.py
