@@ -9,20 +9,33 @@ var app = express();
 
 app.use(express.logger());
 
-app.get("/katex.js", function(req, res, next) {
-    var b = browserify();
-    b.add("./katex");
+var serveBrowserified = function(file, standaloneName) {
+    return function(req, res, next) {
+        var b = browserify();
+        b.add(file);
 
-    var stream = b.bundle({standalone: "katex"});
+        var options = {};
+        if (standaloneName) {
+            options.standalone = standaloneName;
+        }
 
-    var body = "";
-    stream.on("data", function(s) { body += s; });
-    stream.on("error", function(e) { next(e); });
-    stream.on("end", function() {
-        res.setHeader("Content-Type", "text/javascript");
-        res.send(body);
-    });
-});
+        var stream = b.bundle(options);
+
+        var body = "";
+        stream.on("data", function(s) { body += s; });
+        stream.on("error", function(e) { next(e); });
+        stream.on("end", function() {
+            res.setHeader("Content-Type", "text/javascript");
+            res.send(body);
+        });
+    };
+};
+
+app.get("/katex.js", serveBrowserified("./katex", "katex"));
+app.get("/test/katex-spec.js", serveBrowserified("./test/katex-spec"));
+app.get("/contrib/auto-render/auto-render.js",
+        serveBrowserified("./contrib/auto-render/auto-render",
+                          "renderMathInElement"));
 
 app.get("/katex.css", function(req, res, next) {
     fs.readFile("static/katex.less", {encoding: "utf8"}, function(err, data) {
@@ -45,21 +58,6 @@ app.get("/katex.css", function(req, res, next) {
             res.setHeader("Content-Type", "text/css");
             res.send(tree.toCSS());
         });
-    });
-});
-
-app.get("/test/katex-spec.js", function(req, res, next) {
-    var b = browserify();
-    b.add("./test/katex-spec");
-
-    var stream = b.bundle({});
-
-    var body = "";
-    stream.on("data", function(s) { body += s; });
-    stream.on("error", function(e) { next(e); });
-    stream.on("end", function() {
-        res.setHeader("Content-Type", "text/javascript");
-        res.send(body);
     });
 });
 
