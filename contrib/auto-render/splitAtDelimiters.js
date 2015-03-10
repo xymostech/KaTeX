@@ -1,7 +1,7 @@
-var findEndOfMath = function(delimiter, text) {
+var findEndOfMath = function(delimiter, text, startIndex) {
     // Adapted from
     // https://github.com/Khan/perseus/blob/master/src/perseus-markdown.jsx
-    var index = 0;
+    var index = startIndex;
     var braceLevel = 0;
 
     var delimLength = delimiter.length;
@@ -63,7 +63,8 @@ var splitAtDelimiters = function(startData, leftDelim, rightDelim, display) {
                 } else {
                     nextIndex = findEndOfMath(
                         rightDelim,
-                        text.slice(currIndex + leftDelim.length));
+                        text,
+                        currIndex + leftDelim.length);
                     if (nextIndex === -1) {
                         break;
                     }
@@ -72,12 +73,11 @@ var splitAtDelimiters = function(startData, leftDelim, rightDelim, display) {
                         type: "math",
                         data: text.slice(
                             currIndex + leftDelim.length,
-                            currIndex + leftDelim.length + nextIndex),
+                            nextIndex),
                         display: display
                     });
 
-                    currIndex = currIndex + nextIndex +
-                        leftDelim.length + rightDelim.length;
+                    currIndex = nextIndex + rightDelim.length;
                 }
 
                 lookingForLeft = !lookingForLeft;
