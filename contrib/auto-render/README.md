@@ -13,14 +13,14 @@ included in the page:
 <script src="/path/to/auto-render.js"></script>
 ```
 
-Then, call the exposed `window.processMathInElement` function in a script tag
+Then, call the exposed `window.renderMathInElement` function in a script tag
 before the close body tag:
 
 ```html
 <body>
   ...
   <script>
-    window.processMathInElement(document.body);
+    window.renderMathInElement(document.body);
   </script>
 </body>
 ```
@@ -29,11 +29,11 @@ See [index.html](index.html) for an example.
 
 ### API
 
-This extension exposes a single function, `window.processMathInElement`, with
+This extension exposes a single function, `window.renderMathInElement`, with
 the following API:
 
 ```js
-function processMathInElement(elem, options)
+function renderMathInElement(elem, options)
 ```
 
 `elem` is an HTML DOM element. The function will recursively search for text
