@@ -445,6 +445,23 @@ var duplicatedFunctions = [
         }
     },
 
+    {
+        funcs: [
+            "\\begin", "\\end"
+        ],
+        data: {
+            numArgs: 1,
+            argTypes: ["environmentname"],
+            handler: function(func, environmentName) {
+                // This is actually handled in Parser.js
+                return {
+                    type: "environment",
+                    name: environmentName.value
+                };
+            }
+        }
+    },
+
     // Sizing functions (handled in Parser.js explicitly, hence no handler)
     {
         funcs: [

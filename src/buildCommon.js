@@ -156,7 +156,7 @@ var makeFontSizer = function(options, fontSize) {
  *                            so positive values move up)
  *                   - "bottom": The positionData specifies the bottommost point
  *                               of the vlist (note this is expected to be a
- *                               depth, so positive values move down
+ *                               depth, so positive values move down)
  *                   - "shift": The vlist will be positioned such that its
  *                              baseline is positionData away from the baseline
  *                              of the first child. Positive values move

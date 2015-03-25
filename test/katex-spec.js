@@ -1191,6 +1191,129 @@ describe("A phantom builder", function() {
     });
 });
 
+describe("An environment parser", function() {
+    var exampleMatrix =
+        "\\begin{matrix}" +
+        "a & b \\\\" +
+        "c & d" +
+        "\\end{matrix}";
+
+    var exampleAlign =
+        "\\begin{align*}" +
+        "a &= b \\\\" +
+        "c &= d" +
+        "\\end{align*}";
+
+    it("should work for normal environments", function() {
+        expect(exampleMatrix).toParse();
+        expect(exampleAlign).toParse();
+    });
+
+    it("should fail on mismatched \\begin/\\ends", function() {
+        expect("\\begin{matrix}").not.toParse();
+        expect("\\end{matrix}").not.toParse();
+    });
+
+    it("should fail when a bad environment name is provided", function() {
+        expect("\\begin x^2 \\end x^2").not.toParse();
+        expect("\\begin{a b} \\end{a b}").not.toParse();
+    });
+
+    it("should fail on mismatched environments in \\begin/\\ends", function() {
+        expect("\\begin{matrix} \\end{align*}").not.toParse();
+    });
+
+    it("should fail when an environment doesn't exist", function() {
+        expect("\\begin{nonexistant} \\end{nonexistant}").not.toParse();
+    });
+
+    it("should produce an environment group", function() {
+        var parse = getParsed(exampleMatrix)[0];
+
+        expect(parse.type).toEqual("environment");
+        expect(parse.value.name).toEqual("matrix");
+
+        parse = getParsed(exampleAlign)[0];
+
+        expect(parse.value.name).toEqual("align*");
+    });
+
+    it("should group the rows and columns together correctly", function() {
+        var parse = getParsed(exampleMatrix)[0];
+
+        expect(parse.value.rows.length).toEqual(2);
+        expect(parse.value.rows[0].length).toEqual(2);
+        expect(parse.value.rows[1].length).toEqual(2);
+    });
+
+    it("should handle uneven rows/cols correctly", function() {
+        var parse = getParsed("\\begin{matrix}" +
+                              "1 & 2 & 3 \\\\" +
+                              "4 \\\\" +
+                              "5 & 6" +
+                              "\\end{matrix}")[0];
+
+        expect(parse.value.rows.length).toEqual(3);
+        expect(parse.value.rows[0].length).toEqual(3);
+        expect(parse.value.rows[1].length).toEqual(1);
+        expect(parse.value.rows[2].length).toEqual(2);
+    });
+
+    it("should handle trailing newlines correctly", function() {
+        var parse = getParsed("\\begin{matrix}" +
+                              "a \\\\" +
+                              "\\end{matrix}")[0];
+
+        expect(parse.value.rows.length).toEqual(1);
+    });
+
+    it("should fail when there are more than two columns in align", function() {
+        // TODO(emily): This should be removed when we add support for more
+        // than two columns in align.
+        expect("\\begin{align*}" +
+               "a &= b & d &= f" +
+               "\\end{align*}").not.toParse();
+    });
+});
+
+describe("An environment builder", function() {
+    var testMatrix =
+        "\\begin{matrix}" +
+        "a & a \\cr " +
+        "a & a & a \\cr " +
+        "a" +
+        "\\end{matrix}";
+
+    it("should succeed", function() {
+        expect(testMatrix).toBuild();
+    });
+
+    it("should fail when environment markers are used outside of environments", function() {
+        expect("a & b").not.toBuild();
+        expect("a \\\\ b").not.toBuild();
+        expect("a \\cr b").not.toBuild();
+    });
+
+    it("should produce the correct number of columns", function() {
+        var environment = getBuilt(testMatrix)[0];
+
+        expect(environment.children.length).toEqual(3);
+    });
+
+    it("should horizontally align rows", function() {
+        var environment = getBuilt(testMatrix)[0];
+
+        for (var i = 0; i < 2; i++) {
+            var column = environment.children[i];
+            var nextColumn = environment.children[i + 1];
+
+            // The elements in the second row should be aligned
+            expect(column.children[0].children[1].style.top)
+                .toEqual(nextColumn.children[0].children[1].style.top);
+        }
+    });
+});
+
 describe("A parser error", function () {
     it("should report the position of an error", function () {
         try {

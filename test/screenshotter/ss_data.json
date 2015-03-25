@@ -1,5 +1,6 @@
 {
     "Accents": "http://localhost:7936/test/screenshotter/test.html?m=\\vec{A}\\vec{x}\\vec x^2\\vec{x}_2^2\\vec{A}^2\\vec{xA}^2",
+    "Align": "http://localhost:7936/test/screenshotter/test.html?m=\\begin{align*} a %26= b \\cr 23 + 4 %26= x \\cr a %26+ 3 = 5 \\end{align*}",
     "Baseline": "http://localhost:7936/test/screenshotter/test.html?m=a+b-c\\cdot d/e",
     "BasicTest": "http://localhost:7936/test/screenshotter/test.html?m=a",
     "BinomTest": "http://localhost:7936/test/screenshotter/test.html?m=\\dbinom{a}{b}\\tbinom{a}{b}^{\\binom{a}{b}+17}",
@@ -17,6 +18,7 @@
     "LeftRight": "http://localhost:7936/test/screenshotter/test.html?m=\\left( x^2 \\right) \\left\\{ x^{x^{x^{x^x}}} \\right.",
     "LeftRightListStyling": "http://localhost:7936/test/screenshotter/test.html?m=a+\\left(x+y\\right)-x",
     "LeftRightStyleSizing": "http://localhost:7936/test/screenshotter/test.html?m=+\\left\\{\\rule{0.1em}{1em}\\right.x^{+\\left\\{\\rule{0.1em}{1em}\\right.x^{+\\left\\{\\rule{0.1em}{1em}\\right.}}",
+    "Matrix": "http://localhost:7936/test/screenshotter/test.html?m=\\left(\\begin{matrix} 1 %26 2 + 3 %26 4 \\cr x + y %26 z \\cr 6 %26 7 %26 8 %26 9 \\end{matrix} \\right] + 1\\begin{matrix} 1 %26 2 \\cr 3 %26 4 \\end{matrix}+2",
     "NestedFractions": "http://localhost:7936/test/screenshotter/test.html?m=\\dfrac{\\frac{a}{b}}{\\frac{c}{d}}\\dfrac{\\dfrac{a}{b}}{\\dfrac{c}{d}}\\frac{\\frac{a}{b}}{\\frac{c}{d}}",
     "NullDelimiterInteraction": "http://localhost:7936/test/screenshotter/test.html?m=a \\bigl. + 2 \\quad \\left. + a \\right)",
     "OpLimits": "http://localhost:7936/test/screenshotter/test.html?m={\\sin_2^2 \\lim_2^2 \\int_2^2 \\sum_2^2}{\\displaystyle \\lim_2^2 \\int_2^2 \\intop_2^2 \\sum_2^2}",

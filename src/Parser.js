@@ -1,3 +1,4 @@
+var environments = require("./environments");
 var functions = require("./functions");
 var Lexer = require("./Lexer");
 var symbols = require("./symbols");
@@ -396,6 +397,88 @@ Parser.prototype.parseImplicitGroup = function(pos, mode) {
                 value: body.result
             }, mode),
             body.position);
+    } else if (func === "\\begin") {
+        // Handle environments
+
+        // Parse out the \begin and it's environment name
+        var begin = this.parseFunction(pos, mode);
+
+        if (!environments[begin.result.value.name]) {
+            throw new ParseError(
+                "Unsupported environment: " + begin.result.value.name,
+                this.lexer, begin.position);
+        }
+
+        body = this.parseExpression(begin.position, mode, false, "}");
+
+        var endLex = this.parseSymbol(body.position, mode);
+
+        if (endLex && endLex.result.result === "\\end") {
+            var end = this.parseFunction(body.position, mode);
+
+            if (begin.result.value.name !== end.result.value.name) {
+                throw new ParseError(
+                    "Mismatched environments, '" + begin.result.value.name +
+                        "' vs '" + end.result.value.name + "'",
+                    this.lexer, end.position);
+            }
+
+            var envData = environments[begin.result.value.name];
+
+            // Parse out the rows and columns of the environment
+            var rows = [];
+            var currRow = [];
+            var currElement = [];
+            var lastWasNewline = false;
+
+            for (var i = 0; i < body.result.length; i++) {
+                var elem = body.result[i];
+                lastWasNewline = false;
+
+                if (elem.type === "envseparator") {
+                    // If we see an environment separator, we move to the next
+                    // column in the current row.
+                    currRow.push(currElement);
+                    currElement = [];
+                    if (currRow.length > envData.maxColumns) {
+                        throw new ParseError(
+                            "Environment '" + begin.result.value.name +
+                                "' can't have more than " +
+                                envData.maxColumns + " columns",
+                            this.lexer, end.position);
+                    }
+
+                    // If the environment separator is a newline, we also move
+                    // to the next row, and store the current row.
+                    if (elem.value === "\\\\" || elem.value === "\\cr") {
+                        rows.push(currRow);
+                        currRow = [];
+                        lastWasNewline = true;
+                    }
+                } else {
+                    // Otherwise, just push the element into the elements in
+                    // the current box.
+                    currElement.push(elem);
+                }
+            }
+
+            // Do special handling to ignore newlines at the end.
+            if (!lastWasNewline) {
+                currRow.push(currElement);
+                rows.push(currRow);
+            }
+
+            return new ParseResult(
+                new ParseNode("environment", {
+                    name: begin.result.value.name,
+                    rows: rows
+                }, mode),
+                end.position);
+        } else {
+            throw new ParseError("Missing \\end", this.lexer, body.position);
+        }
+    } else if (func === "\\end") {
+        return null;
     } else {
         // Defer to parseFunction if it's not a function we handle
         return this.parseFunction(pos, mode);
@@ -508,7 +591,7 @@ Parser.prototype.parseSpecialGroup = function(pos, mode, outerMode, optional) {
         mode = outerMode;
     }
 
-    if (mode === "color" || mode === "size") {
+    if (mode === "color" || mode === "size" || mode === "environmentname") {
         // color and size modes are special because they should have braces and
         // should only lex a single symbol inside
         var openBrace = this.lexer.lex(pos, outerMode);

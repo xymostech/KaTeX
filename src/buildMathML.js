@@ -376,9 +376,27 @@ var groupTypes = {
         return node;
     },
 
-    phantom: function(group, options, prev) {
+    phantom: function(group) {
         var inner = buildExpression(group.value.value);
         return new mathMLTree.MathNode("mphantom", inner);
+    },
+
+    environment: function(group) {
+        var tableElems = [];
+
+        for (var i = 0; i < group.value.rows.length; i++) {
+            var row = group.value.rows[i];
+            var rowElems = [];
+
+            for (var j = 0; j < row.length; j++) {
+                var inner = buildExpression(row[j]);
+                rowElems.push(new mathMLTree.MathNode("mtd", inner));
+            }
+
+            tableElems.push(new mathMLTree.MathNode("mtr", rowElems));
+        }
+
+        return new mathMLTree.MathNode("mtable", tableElems);
     }
 };
 
@@ -408,6 +426,9 @@ var buildGroup = function(group) {
     if (groupTypes[group.type]) {
         // Call the groupTypes function
         return groupTypes[group.type](group);
+    } else if (group.type === "envseparator") {
+        throw new ParseError(
+            "Got environment separator outside of an environment");
     } else {
         throw new ParseError(
             "Got group of unknown type: '" + group.type + "'");

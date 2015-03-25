@@ -37,7 +37,8 @@ var mathNormals = [
     /['\^_{}]/, // misc
     /[(\[]/, // opens
     /[)\]?!]/, // closes
-    /~/ // spacing
+    /~/, // spacing
+    /&/ // environment alignment
 ];
 
 // These are "normal" tokens like above, but should instead be parsed in text
@@ -169,6 +170,17 @@ Lexer.prototype._innerLexWhitespace = function(pos) {
     return new Token(whitespace[0], null, pos);
 };
 
+Lexer.prototype._innerLexEnvironmentName = function(pos) {
+    var input = this._input.slice(pos);
+
+    var name = input.match(/^[^}]*/)[0];
+    if (!/^[a-zA-Z]+\*?/.test(name)) {
+        throw new ParseError("Invalid environment name: '" + name + "'", this, pos);
+    }
+
+    return new Token(name, name, pos + name.length);
+};
+
 /**
  * This function lexes a single token starting at `pos` and of the given mode.
  * Based on the mode, we defer to one of the `_innerLex` functions.
@@ -184,6 +196,10 @@ Lexer.prototype.lex = function(pos, mode) {
         return this._innerLexSize(pos);
     } else if (mode === "whitespace") {
         return this._innerLexWhitespace(pos);
+    } else if (mode === "environmentname") {
+        return this._innerLexEnvironmentName(pos);
+    } else {
+        throw new ParseError("Invalid lexing mode: " + mode, this, pos);
     }
 };
 

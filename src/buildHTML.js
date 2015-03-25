@@ -12,6 +12,7 @@ var Style = require("./Style");
 var buildCommon = require("./buildCommon");
 var delimiter = require("./delimiter");
 var domTree = require("./domTree");
+var environments = require("./environments");
 var fontMetrics = require("./fontMetrics");
 var utils = require("./utils");
 
@@ -52,7 +53,8 @@ var groupToType = {
     rule: "mord",
     leftright: "minner",
     sqrt: "mord",
-    accent: "mord"
+    accent: "mord",
+    environment: "mord"
 };
 
 /**
@@ -1077,6 +1079,156 @@ var groupTypes = {
         // \phantom isn't supposed to affect the elements it contains.
         // See "color" for more details.
         return new buildCommon.makeFragment(elements);
+    },
+
+    environment: function(group, options, _prev) {
+        var i, row, col;
+
+        // Pull out the data about this environment
+        var envData = environments[group.value.name];
+
+        // Figure out the maximum number of columns used in all of the rows
+        var mostColumns = 0;
+        for (i = 0; i < group.value.rows.length; i++) {
+            mostColumns = Math.max(mostColumns, group.value.rows[i].length);
+        }
+
+        // Keep track of the column data
+        var columns = [];
+
+        for (col = 0; col < mostColumns; col++) {
+            // The current column
+            var column = [];
+
+            var alignMerge = envData.alignMerge(group.value, col);
+
+            for (row = 0; row < group.value.rows.length; row++) {
+                var elems = [];
+
+                // Figure out if a previous element should be passed in to this
+                // row.
+                var prev = null;
+                if (alignMerge) {
+                    // When the column should merge (like in align), we add a
+                    // fake empty ordgroup as the previous element.
+                    prev = {
+                        type: "ordgroup",
+                        value: [],
+                        mode: "math"
+                    };
+                }
+
+                // Check if there's actually an element here, in the row data
+                if (group.value.rows[row].length > col) {
+                    var expr = group.value.rows[row][col];
+                    // Build the expression
+                    elems = buildExpression(expr, options.reset(), prev);
+                }
+
+                if (prev) {
+                    // If we had a previous element, we also put in an empty
+                    // element of the right group type so that CSS spacing
+                    // works.
+                    elems.unshift(makeSpan([getTypeOfGroup(prev)], []));
+                }
+
+                column.push(makeSpan([options.style.cls()], elems));
+            }
+
+            columns.push(column);
+        }
+
+        // Calculate the maximum heights and depths of all of the rows, so we
+        // can align them correctly.
+        var rowHeights = [];
+        var rowDepths = [];
+        for (row = 0; row < group.value.rows.length; row++) {
+            var rowHeight = 0;
+            var rowDepth = 0;
+
+            for (col = 0; col < mostColumns; col++) {
+                rowHeight = Math.max(rowHeight, columns[col][row].height);
+                rowDepth = Math.max(rowDepth, columns[col][row].depth);
+            }
+
+            rowHeights.push(rowHeight);
+            rowDepths.push(rowDepth);
+        }
+
+        // Figure out spacing between rows based on skip metrics. Explanations
+        // of how `baselineskip`, `lineskiplimit` and `lineskip` work provided
+        // by TeX for the Impatient, page 153.
+        var rowSpacing = [0];
+        for (row = 1; row < rowHeights.length; row++) {
+            // Initially, we try to have the baselines be `baselineSkip` apart.
+            var space = fontMetrics.metrics.baselineSkip -
+                (rowDepths[row - 1] + rowHeights[row]);
+
+            if (space < fontMetrics.metrics.lineSkipLimit) {
+                // If that space is less than `lineSkipLimit`, we instead use a
+                // constant `lineSkip` amount of space.
+                space = fontMetrics.metrics.lineSkip;
+            }
+
+            rowSpacing.push(space);
+        }
+
+        // Calculate the total height + depth + spacing of the environment, so
+        // we can center it correctly.
+        var totalSize = 0;
+        for (row = 0; row < rowHeights.length; row++) {
+            totalSize += rowHeights[row] + rowDepths[row];
+            if (row > 0) {
+                totalSize += rowSpacing[row];
+            }
+        }
+
+        // We center the environment about the axis, so we need to shift it by
+        // the axis height.
+        var centerShift = fontMetrics.metrics.axisHeight;
+
+        // Build vlists for each of the columns
+        var colElems = [];
+        for (col = 0; col < columns.length; col++) {
+            // Since the elements need to take into account the heights and
+            // depths of the other columns, not just their own, we need to
+            // position each element in the vlists manually, we can't let
+            // `makeVList` do it for us.
+            var vlistNodes = [];
+            // Start at the bottom
+            var currPos = totalSize / 2 - centerShift;
+            for (row = columns[col].length - 1; row >= 0; row--) {
+                vlistNodes.push({
+                    type: "elem",
+                    elem: columns[col][row],
+                    shift: currPos - rowDepths[row]
+                });
+                currPos -= rowDepths[row] + rowHeights[row] + rowSpacing[row];
+            }
+
+            var vlist = buildCommon.makeVList(
+                vlistNodes, "individualShift", null, options);
+
+            // Figure out the appropriate alignment for the column
+            var colAlign = envData.alignment(group.value, col);
+
+            var colElem = makeSpan(
+                ["column", "column-align-" + colAlign], [vlist]);
+
+            var leftSpacing = envData.spacing(group.value, col);
+            colElem.style.marginLeft = leftSpacing + "em";
+
+            colElems.push(colElem);
+        }
+
+        var environment = makeSpan(["environment", "mord"], colElems);
+
+        // Add in any extra vertical space around environments
+        var verticalSpace = envData.verticalSpace(group.value);
+        environment.height += verticalSpace.top;
+        environment.depth += verticalSpace.bottom;
+
+        return environment;
     }
 };
 
@@ -1116,6 +1268,9 @@ var buildGroup = function(group, options, prev) {
         }
 
         return groupNode;
+    } else if (group.type === "envseparator") {
+        throw new ParseError(
+            "Got environment separator outside of an environment");
     } else {
         throw new ParseError(
             "Got group of unknown type: '" + group.type + "'");

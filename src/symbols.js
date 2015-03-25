@@ -2493,6 +2493,19 @@ var symbols = {
             font: "main",
             group: "accent",
             replace: "\u02d9"
+        },
+        // Environment symbols
+        "&": {
+            font: "main",
+            group: "envseparator"
+        },
+        "\\\\": {
+            font: "main",
+            group: "envseparator"
+        },
+        "\\cr": {
+            font: "main",
+            group: "envseparator"
         }
     },
     "text": {

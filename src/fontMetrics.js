@@ -67,6 +67,11 @@ var xi13 = 0.1;
 // match.
 var ptPerEm = 10.0;
 
+// Inter-line spacing options
+var baselineSkip = 12.0 / ptPerEm;
+var lineSkipLimit = 0.0 / ptPerEm;
+var lineSkip = 1.0 / ptPerEm;
+
 /**
  * This is just a mapping from common names to real metrics
  */
@@ -93,6 +98,9 @@ var metrics = {
     bigOpSpacing4: xi12,
     bigOpSpacing5: xi13,
     ptPerEm: ptPerEm,
+    baselineSkip: baselineSkip,
+    lineSkipLimit: lineSkipLimit,
+    lineSkip: lineSkip,
 
     // TODO(alpert): Missing parallel structure here. We should probably add
     // style-specific metrics for all of these.
