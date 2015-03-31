@@ -62,12 +62,20 @@ describe("A delimiter splitter", function() {
         expect("hello").toSplitInto("(", ")", [{type: "text", data: "hello"}]);
     });
 
-    it("doesn't split when there's only a left delimiter", function() {
+    it("doesn't create a math node when there's only a left delimiter", function() {
         expect("hello ( world").toSplitInto(
             "(", ")",
             [
                 {type: "text", data: "hello "},
-                {type: "text", data: "( world"},
+                {type: "text", data: "( world"}
+            ]);
+    });
+
+    it("doesn't split when there's only a right delimiter", function() {
+        expect("hello ) world").toSplitInto(
+            "(", ")",
+            [
+                {type: "text", data: "hello ) world"}
             ]);
     });
 

@@ -38,13 +38,13 @@ var splitAtDelimiters = function(startData, leftDelim, rightDelim, display) {
             var nextIndex;
 
             nextIndex = text.indexOf(leftDelim);
-            lookingForLeft = false;
             if (nextIndex !== -1) {
                 currIndex = nextIndex;
                 finalData.push({
                     type: "text",
                     data: text.slice(0, currIndex)
                 });
+                lookingForLeft = false;
             }
 
             while (true) {
