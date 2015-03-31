@@ -12,8 +12,43 @@ beforeEach(function() {
 
                     var startData = [{type: "text", data: actual}];
 
-                    expect(splitAtDelimiters(
-                        startData, left, right, false)).toEqual(result);
+                    var split = splitAtDelimiters(startData, left, right, false);
+
+                    if (split.length !== result.length) {
+                        message.pass = false;
+                        message.message = "Different number of splits: " +
+                            split.length + " vs. " + result.length + " (" +
+                            JSON.stringify(split) + " vs. " +
+                            JSON.stringify(result) + ")";
+                        return message;
+                    }
+
+                    for (var i = 0; i < split.length; i++) {
+                        var real = split[i];
+                        var correct = result[i];
+
+                        var good = true;
+
+                        if (real.type !== correct.type) {
+                            good = false;
+                            diff = "type";
+                        } else if (real.data !== correct.data) {
+                            good = false;
+                            diff = "data";
+                        } else if (real.display !== correct.display) {
+                            good = false;
+                            diff = "display";
+                        }
+
+                        if (!good) {
+                            message.pass = false;
+                            message.message = "Difference at split " +
+                                (i + 1) + ": " + JSON.stringify(real) +
+                                " vs. " + JSON.stringify(correct) +
+                                " (" + diff + " differs)";
+                            break;
+                        }
+                    }
 
                     return message;
                 }
